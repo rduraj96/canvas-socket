@@ -15,10 +15,8 @@ type DrawLineProps = {
   color: string;
 };
 
-const page = (props: Props) => {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+export default function Home() {
   const { canvasRef, onMouseDown, clear } = useDraw(createLine);
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [color, setColor] = useState<string>("#000");
 
   useEffect(() => {
@@ -85,6 +83,4 @@ const page = (props: Props) => {
       />
     </div>
   );
-};
-
-export default page;
+}
