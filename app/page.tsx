@@ -1,32 +1,66 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useEffect, useState } from "react";
 import { useDraw } from "../hooks/useDraw";
 import { ChromePicker } from "react-color";
+import { io } from "socket.io-client";
+import { drawLine } from "@/utils/drawLine";
+const socket = io("http://localhost:3001");
 
 type Props = {};
 
+type DrawLineProps = {
+  prevPoint: Point | null;
+  currentPoint: Point;
+  color: string;
+};
+
 const page = (props: Props) => {
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { canvasRef, onMouseDown, clear } = useDraw(drawLine);
+  const { canvasRef, onMouseDown, clear } = useDraw(createLine);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [color, setColor] = useState<string>("#000");
 
-  function drawLine({ prevPoint, currentPoint, ctx }: Draw) {
-    const { x: currX, y: currY } = currentPoint;
-    const lineColor = color;
-    const lineWidth = 5;
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext("2d");
 
-    let startPoint = prevPoint ?? currentPoint;
-    ctx.beginPath();
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = lineColor;
-    ctx.moveTo(startPoint.x, startPoint.y);
-    ctx.lineTo(currX, currY);
-    ctx.stroke();
+    socket.emit("client-ready");
 
-    ctx.fillStyle = lineColor;
-    ctx.beginPath();
-    ctx.arc(startPoint.x, startPoint.y, 2, 0, 2 * Math.PI);
-    ctx.fill();
+    socket.on("get-canvas-state", () => {
+      if (!canvasRef.current?.toDataURL()) return;
+      socket.emit("canvas-state", canvasRef.current.toDataURL());
+    });
+
+    socket.on("canvas-state-from-server", (state: string) => {
+      const img = new Image();
+      img.src = state;
+      img.onload = () => {
+        ctx?.drawImage(img, 0, 0);
+      };
+    });
+
+    socket.on(
+      "draw-line",
+      ({ prevPoint, currentPoint, color }: DrawLineProps) => {
+        if (!ctx) return;
+        drawLine({ prevPoint, currentPoint, ctx, color });
+      }
+    );
+
+    socket.on("clear", clear);
+
+    return () => {
+      socket.off("client-ready");
+      socket.off("get-canvas-state");
+      socket.off("canvas-state-from-server");
+      socket.off("draw-line");
+      socket.off("clear");
+    };
+  }, [canvasRef]);
+
+  function createLine({ prevPoint, currentPoint, ctx }: Draw) {
+    socket.emit("draw-line", { prevPoint, currentPoint, color });
+    drawLine({ prevPoint, currentPoint, ctx, color });
   }
 
   return (
@@ -36,7 +70,7 @@ const page = (props: Props) => {
         <button
           type="button"
           className="p-2 rounded-md border border-black "
-          onClick={clear}
+          onClick={() => socket.emit("clear")}
         >
           Clear Canvas
         </button>
