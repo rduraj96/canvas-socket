@@ -35,8 +35,8 @@ io.on("connection", (socket) => {
   socket.on("clear", () => io.emit("clear"));
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, () => {
-  console.log("🍆 Server listening on port 3001");
+server.listen(process.env.PORT, () => {
+  console.log(`🍆 Server listening on port ${process.env.PORT}`);
 });
