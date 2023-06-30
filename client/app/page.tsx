@@ -7,6 +7,7 @@ import { io } from "socket.io-client";
 import { drawLine } from "@/utils/drawLine";
 const socket = io("http://localhost:3000", {
   path: "/api/socket_io",
+  addTrailingSlash: false,
 });
 
 type Props = {};
@@ -65,7 +66,6 @@ export default function Home() {
       socket.off("draw-line");
       socket.off("clear");
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasRef]);
 
   useEffect(() => {
