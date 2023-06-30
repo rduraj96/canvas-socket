@@ -5,7 +5,8 @@ import { useDraw } from "../hooks/useDraw";
 import { ChromePicker } from "react-color";
 import { io } from "socket.io-client";
 import { drawLine } from "@/utils/drawLine";
-const socket = io(process.env.EXPRESS_URL!);
+const socket = io(process.env.NEXT_PUBLIC_EXPRESS_URL!);
+console.log(socket.id);
 
 type Props = {};
 
