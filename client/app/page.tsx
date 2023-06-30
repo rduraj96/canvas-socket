@@ -5,8 +5,9 @@ import { useDraw } from "../hooks/useDraw";
 import { ChromePicker } from "react-color";
 import { io } from "socket.io-client";
 import { drawLine } from "@/utils/drawLine";
-const socket = io(process.env.NEXT_PUBLIC_EXPRESS_URL!);
-console.log(socket.id);
+const socket = io("http://localhost:3000", {
+  path: "/api/socket_io",
+});
 
 type Props = {};
 
@@ -19,9 +20,18 @@ type DrawLineProps = {
 export default function Home() {
   const { canvasRef, onMouseDown, clear } = useDraw(createLine);
   const [color, setColor] = useState<string>("#000");
+  const [isMounted, setIsMounted] = useState(false);
+
+  // connected flag
+  const [connected, setConnected] = useState<boolean>(false);
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
+
+    socket.on("connect", () => {
+      console.log("SOCKET CONNECTED!", socket.id);
+      setConnected(true);
+    });
 
     socket.emit("client-ready");
 
@@ -55,12 +65,19 @@ export default function Home() {
       socket.off("draw-line");
       socket.off("clear");
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasRef]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   function createLine({ prevPoint, currentPoint, ctx }: Draw) {
     socket.emit("draw-line", { prevPoint, currentPoint, color });
     drawLine({ prevPoint, currentPoint, ctx, color });
   }
+
+  if (!isMounted) return <div>Loading...</div>;
 
   return (
     <div className="w-screen h-screen bg-white flex items-center justify-center">
