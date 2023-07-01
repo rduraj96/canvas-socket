@@ -25,6 +25,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("canvas-state", (state) => {
+    console.log("received canvas state");
     socket.broadcast.emit("canvas-state-from-server", state);
   });
 
@@ -35,8 +36,6 @@ io.on("connection", (socket) => {
   socket.on("clear", () => io.emit("clear"));
 });
 
-const PORT = process.env.PORT || 3001;
-
-server.listen(process.env.PORT, () => {
-  console.log(`🍆 Server listening on port ${process.env.PORT}`);
+server.listen(3001, () => {
+  console.log(`🍆 Server listening on port 3001`);
 });
